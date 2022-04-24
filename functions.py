@@ -230,7 +230,6 @@ def userFunction(Company):
 def optionsParams(stockPrices, rf, opType, T, k):
     S_t = stockPrices[-1]
     returns = stockPrices.pct_change().dropna()
-    T = T / 12
     if T == 1:
         r = rf[0] / 100
     elif T == 3:
@@ -238,6 +237,7 @@ def optionsParams(stockPrices, rf, opType, T, k):
     else:
         r = rf[2] / 100
         
+    T = T / 12
     sigma = np.std(returns) * np.sqrt(252)
     
     d1 = (np.log(S_t / k) + (r + (sigma **2) / 2) * T) / (sigma * np.sqrt(T))
@@ -283,7 +283,7 @@ def options(Company, end = dt.datetime.today()):
     params = ["Prima $ (USD)", "Delta", "Gamma", "Rho", "Vega", "Theta"]
     Ts = [1, 3, 6]
     index = pd.MultiIndex.from_product([Ks, Ts, ["Call", "Put"]], names = ["Ejercicio $ (USD)", "Expiración (mes)", "Tipo de Opción"])
-    results = [optionsParams(stockPrices, riskFree_s, i, j, k) for k in Ks for j in Ts  for i in ["Call", "Put"]]
+    results = [optionsParams(stockPrices, riskFree_s, i, j, k) for k in Ks for j in Ts for i in ["Call", "Put"]]
     optionsDF = pd.DataFrame(results, index = index, columns = params)
     
     return optionsDF, Ks
@@ -313,9 +313,9 @@ def optionsVisual(Company, OptionsType_Button, OptionsK_Button, OptionsT_Button,
     S_t = stockPrices[-1]
     returns = stockPrices.pct_change().dropna()
     T = T / 12
-    if T == 1:
+    if OptionsT_Button.value == 1:
         r = rf[0] / 100
-    elif T == 3:
+    elif OptionsT_Button.value == 3:
         r = rf[1] / 100
     else:
         r = rf[2] / 100
@@ -333,8 +333,15 @@ def optionsVisual(Company, OptionsType_Button, OptionsK_Button, OptionsT_Button,
         fig1 = go.Figure(data = go.Scatter(x = x, y = [-prima if i < k else i - prima - k for i in x]))
         fig1.update_layout(title = "Función de Pago del Call",
                    xaxis_title = r"$S_t$",
-                   yaxis_title = r"\$ (USD)")
-        fig1.show()
+                   yaxis_title = "USD")
+        
+        # Visual: Evolución del Capital
+        stockCloses = yf.download(ticker, start = pd.to_datetime(stockPrices.index[-1]), end = end + dt.timedelta(OptionsT_Button.value * 30), progress = False)["Adj Close"]
+        stockCloses = stockCloses - prima - k
+        fig2 = go.Figure(data = go.Scatter(x = stockCloses.index, y = stockCloses.values))
+        fig2.update_layout(title = "Evolución de la Función de Pago del Call", 
+                          xaxis_title = "Fecha",
+                          yaxis_title = "USD")
             
     else:
         prima = k * np.exp(-r * T) * st.norm().cdf(-d2) - S_t * st.norm().cdf(-d1)
@@ -344,9 +351,17 @@ def optionsVisual(Company, OptionsType_Button, OptionsK_Button, OptionsT_Button,
         fig1 = go.Figure(data = go.Scatter(x = x, y = [k - i - prima if i < k else -prima for i in x]))
         fig1.update_layout(title = "Función de Pago del Put",
                    xaxis_title = r"$S_t$",
-                   yaxis_title = "$ (USD)")
-        fig1.show()
+                   yaxis_title = "USD")
         
+        # Visual: Evolución del Capital
+        stockCloses = yf.download(ticker, start = pd.to_datetime(stockPrices.index[-1]), end = end + dt.timedelta(OptionsT_Button.value * 30), progress = False)["Adj Close"]
+        stockCloses = k - stockCloses - prima
+        fig2 = go.Figure(data = go.Scatter(x = stockCloses.index, y = stockCloses.values))
+        fig2.update_layout(title = "Evolución de la Función de Pago del Put", 
+                          xaxis_title = "Fecha",
+                          yaxis_title = "USD")
+    
+    return fig1, fig2, prima
         
       
         
