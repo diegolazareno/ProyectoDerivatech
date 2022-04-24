@@ -332,7 +332,7 @@ def optionsVisual(Company, OptionsType_Button, OptionsK_Button, OptionsT_Button,
         x = np.arange(0, 2 * S_t, 0.0001)
         fig1 = go.Figure(data = go.Scatter(x = x, y = [-prima if i < k else i - prima - k for i in x]))
         fig1.update_layout(title = "Función de Pago del Call",
-                   xaxis_title = r"$S_t$",
+                   xaxis_title = r"$S_T$",
                    yaxis_title = "USD")
         
         # Visual: Evolución del Capital
@@ -350,7 +350,7 @@ def optionsVisual(Company, OptionsType_Button, OptionsK_Button, OptionsT_Button,
         x = np.arange(0, 2 * S_t, 0.0001)
         fig1 = go.Figure(data = go.Scatter(x = x, y = [k - i - prima if i < k else -prima for i in x]))
         fig1.update_layout(title = "Función de Pago del Put",
-                   xaxis_title = r"$S_t$",
+                   xaxis_title = r"$S_T$",
                    yaxis_title = "USD")
         
         # Visual: Evolución del Capital
