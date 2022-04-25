@@ -38,6 +38,7 @@ import certifi
 import json
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 def get_jsonparsed_data(url):
     """
@@ -337,11 +338,17 @@ def optionsVisual(Company, OptionsType_Button, OptionsK_Button, OptionsT_Button,
         
         # Visual: Evolución del Capital
         stockCloses = yf.download(ticker, start = pd.to_datetime(stockPrices.index[-1]), end = end + dt.timedelta(OptionsT_Button.value * 30), progress = False)["Adj Close"]
-        stockCloses = stockCloses - prima - k
-        fig2 = go.Figure(data = go.Scatter(x = stockCloses.index, y = stockCloses.values))
-        fig2.update_layout(title = "Evolución de la Función de Pago del Call", 
-                          xaxis_title = "Fecha",
-                          yaxis_title = "USD")
+        payoff = np.round(stockCloses, 2) - prima - k
+        #fig2 = go.Figure(data = go.Scatter(x = stockCloses.index, y = stockCloses.values))
+        #fig2.update_layout(title = "Evolución de la Función de Pago del Call", 
+        #                  xaxis_title = "Fecha",
+        #                  yaxis_title = "USD")
+        
+        fig2 = make_subplots(specs=[[{"secondary_y": True}]])
+        fig2.add_trace(go.Scatter(x = stockCloses.index, y = stockCloses.values, name = r"$S_t$"), secondary_y = False,)
+        fig2.add_trace(go.Scatter(x = stockCloses.index, y = np.ones(len(stockCloses)) * k, name = r"$K$"), secondary_y = False,)
+        fig2.add_trace(go.Scatter(x = stockCloses.index, y = payoff.values, name = r"$C_t$"), secondary_y = True,)
+        fig2.update_layout(title = "Evolución de la Función de Pago del Call", xaxis_title = "Fecha", yaxis_title = "USD")
             
     else:
         prima = k * np.exp(-r * T) * st.norm().cdf(-d2) - S_t * st.norm().cdf(-d1)
@@ -355,11 +362,17 @@ def optionsVisual(Company, OptionsType_Button, OptionsK_Button, OptionsT_Button,
         
         # Visual: Evolución del Capital
         stockCloses = yf.download(ticker, start = pd.to_datetime(stockPrices.index[-1]), end = end + dt.timedelta(OptionsT_Button.value * 30), progress = False)["Adj Close"]
-        stockCloses = k - stockCloses - prima
-        fig2 = go.Figure(data = go.Scatter(x = stockCloses.index, y = stockCloses.values))
-        fig2.update_layout(title = "Evolución de la Función de Pago del Put", 
-                          xaxis_title = "Fecha",
-                          yaxis_title = "USD")
+        payoff = k - np.round(stockCloses, 2) - prima
+        #fig2 = go.Figure(data = go.Scatter(x = stockCloses.index, y = stockCloses.values))
+        #fig2.update_layout(title = "Evolución de la Función de Pago del Put", 
+        #                  xaxis_title = "Fecha",
+        #                  yaxis_title = "USD")
+        
+        fig2 = make_subplots(specs=[[{"secondary_y": True}]])
+        fig2.add_trace(go.Scatter(x = stockCloses.index, y = stockCloses.values, name = r"$S_t$"), secondary_y = False,)
+        fig2.add_trace(go.Scatter(x = stockCloses.index, y = np.ones(len(stockCloses)) * k, name = r"$K$"), secondary_y = False,)
+        fig2.add_trace(go.Scatter(x = stockCloses.index, y = payoff.values, name = r"$P_t$"), secondary_y = True,)
+        fig2.update_layout(title = "Evolución de la Función de Pago del Put", xaxis_title = "Fecha", yaxis_title = "USD")
     
     return fig1, fig2, prima
         
